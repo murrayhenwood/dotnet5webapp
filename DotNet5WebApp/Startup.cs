@@ -49,17 +49,19 @@ namespace DotNet5WebApp
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(
-                    c => {
-                        c.SwaggerEndpoint("/swagger/v1/swagger.json", "DotNet5WebApp v1");
-                        c.RoutePrefix = string.Empty;
-                    });
             }
+
+            app.UseSwagger();
+            app.UseSwaggerUI(
+                c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "DotNet5WebApp v1");
+                    c.RoutePrefix = string.Empty;
+                });
 
             app.UseSerilogRequestLogging();
 
-            app.UseHttpsRedirection();
+            //   app.UseHttpsRedirection();
 
             app.UseRouting();
 
