@@ -1,10 +1,13 @@
 using DotNet5WebApp.Core;
+using DotNet5WebApp.Core.Vault;
+using DotNet5WebApp.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.JsonPatch.Operations;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,8 +17,10 @@ using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
+
 
 namespace DotNet5WebApp
 {
@@ -26,11 +31,29 @@ namespace DotNet5WebApp
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
+        //public IConfiguration Configuration { get; }
+        public static IConfiguration Configuration { get; private set; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<VaultOptions>(Configuration.GetSection("Vault"));
+
+            var dbBuilder = new SqlConnectionStringBuilder(
+              Configuration.GetConnectionString("Database")
+            );
+
+            if (Configuration["database:userID"] != null)
+            {
+                dbBuilder.UserID = Configuration["database:userID"];
+                dbBuilder.Password = Configuration["database:password"];
+
+                Configuration.GetSection("ConnectionStrings")["Database"] = dbBuilder.ConnectionString;
+            }
+
+            services.AddDbContext<ProjectContext>(opt =>
+                opt.UseSqlServer(Configuration.GetConnectionString("Database")));
+
 
             services.AddApiVersioning();
             services.AddControllers();
@@ -89,26 +112,4 @@ namespace DotNet5WebApp
             });
         }
     }
-
-
-    //public class RemoveVersionFromParameter : Swashbuckle.AspNetCore.SwaggerGen.IOperationFilter
-    //{
-    //    public void Apply(Operation operation, OperationFilterContext context)
-    //    {
-    //        var versionParameter = operation.Parameters.Single(p => p.Name == "version");
-    //        operation.Parameters.Remove(versionParameter);
-    //    }
-    //}
-
-    //public class ReplaceVersionWithExactValueInPath : Swashbuckle.AspNetCore.SwaggerGen.IDocumentFilter
-    //{
-    //    public void Apply(SwaggerDocument swaggerDoc, DocumentFilterContext context)
-    //    {
-    //        swaggerDoc.Paths = swaggerDoc.Paths
-    //            .ToDictionary(
-    //                path => path.Key.Replace("v{version}", swaggerDoc.Info.Version),
-    //                path => path.Value
-    //            );
-    //    }
-    //}
 }

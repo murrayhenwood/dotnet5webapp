@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using DotNet5WebApp.Core.Vault;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -34,6 +35,18 @@ namespace DotNet5WebApp.Core
                              providerPath: builtConfig["providerPath"]);
 
                           configBuilder.AddJsonStream(vaultFileProvider.MemoryStream);
+                     }
+                     if (builtConfig.GetSection("Vault")["Role"] != null)
+                     {
+                         configBuilder.AddVault(options =>
+                         {
+                             var vaultOptions = builtConfig.GetSection("Vault");
+                             options.Address = vaultOptions["Address"];
+                             options.Role = vaultOptions["Role"];
+                             options.MountPath = vaultOptions["MountPath"];
+                             options.Engine = vaultOptions["Engine"];
+                             options.VaultToken = builtConfig.GetSection("VAULT_SECRET_ID").Value;
+                         });
                      }
                  })
                  .UseSerilog((hostBuilderContext, loggerConfiguration) =>

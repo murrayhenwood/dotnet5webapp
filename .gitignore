@@ -361,3 +361,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 DotNet5WebApp/Properties/launchSettings.json
+/DotNet5WebApp/appsettings.json
