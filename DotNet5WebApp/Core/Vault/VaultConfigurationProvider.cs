@@ -22,8 +22,7 @@ namespace DotNet5WebApp.Core.Vault
 
             var vaultClientSettings = new VaultClientSettings(
                 _config.Address,
-                new VaultSharp.V1.AuthMethods.Token.TokenAuthMethodInfo(_config.VaultToken)
-            );
+                new VaultSharp.V1.AuthMethods.Token.TokenAuthMethodInfo(_config.VaultToken));
 
             _client = new VaultClient(vaultClientSettings);
         }
@@ -40,13 +39,14 @@ namespace DotNet5WebApp.Core.Vault
 
         public async Task GetDatabaseCredentials()
         {
-            Secret<UsernamePasswordCredentials> dynamicDatabaseCredentials =
-            await _client.V1.Secrets.Database.GetCredentialsAsync(
-              _config.Role,
-              _config.MountPath + _config.Engine);
+            foreach (var role in _config.Roles)
+            {
+                Secret<UsernamePasswordCredentials> dynamicDatabaseCredentials =
+                    await _client.V1.Secrets.Database.GetCredentialsAsync( role, _config.MountPath + _config.Engine);
 
-            Data.Add("database:userID", dynamicDatabaseCredentials.Data.Username);
-            Data.Add("database:password", dynamicDatabaseCredentials.Data.Password);
+                Data.Add("database:" + role + ":userID", dynamicDatabaseCredentials.Data.Username);
+                Data.Add("database:" + role + ":password", dynamicDatabaseCredentials.Data.Password);
+            }
         }
     }
 }

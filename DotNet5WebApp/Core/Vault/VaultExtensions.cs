@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace DotNet5WebApp.Core.Vault
 {
-    public static class VaultExtensions
+    public static class IConfigurationBuilder_VaultExtensions
     {
-        public static IConfigurationBuilder AddVault(this IConfigurationBuilder configuration,
+        public static IConfigurationBuilder AddVaultSecretsEngineConfiguration(
+            this IConfigurationBuilder configuration,
         Action<VaultOptions> options)
         {
             var vaultOptions = new VaultConfigurationSource(options);

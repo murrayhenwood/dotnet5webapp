@@ -1,4 +1,5 @@
 ﻿using DotNet5WebApp.Core.Vault;
+using DotNet5WebApp.Core.Vault.KV;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,30 +23,31 @@ namespace DotNet5WebApp.Core
             return Host.CreateDefaultBuilder(args)
                  .ConfigureAppConfiguration((context, configBuilder) =>
                  {
-                     var builtConfig = configBuilder.Build();
+                     var builder = new ConfigurationBuilder().AddEnvironmentVariables();
+                     var configuration = builder.Build();
 
-                     if (builtConfig["vaultAddress"] != null)
+                     if (configuration["vaultAddress"] != null)
                      {
-                         Console.WriteLine("Vault address found in environment, importing config");
+                         Console.WriteLine("HashiCorp Vault address found in environment, importing config");
 
-                         var vaultFileProvider = new VaultFileProvider(
-                             vaultAddress: builtConfig["vaultAddress"],
-                             vaultToken: builtConfig["vaultToken"],
-                             secretPath: builtConfig["secretPath"],
-                             providerPath: builtConfig["providerPath"]);
+                         var vaultKeyValueBackedConfiguration = new VaultKeyValueBackedConfigurationProvider(
+                             vaultAddress: configuration["vaultAddress"],
+                             vaultToken: configuration["vaultToken"],
+                             secretPath: configuration["secretPath"],
+                             providerPath: configuration["providerPath"]);
 
-                          configBuilder.AddJsonStream(vaultFileProvider.MemoryStream);
+                         configBuilder.AddJsonStream(vaultKeyValueBackedConfiguration.CreateReadStream());
+
+                         configuration = builder.AddJsonStream(vaultKeyValueBackedConfiguration.CreateReadStream()).Build();
+
+                         Console.WriteLine("Config imported from HashiCorp Vault");
                      }
-                     if (builtConfig.GetSection("Vault")["Role"] != null)
+
+                     if (configuration.GetSection("VaultOptions") != null)
                      {
-                         configBuilder.AddVault(options =>
+                         configBuilder.AddVaultSecretsEngineConfiguration(options =>
                          {
-                             var vaultOptions = builtConfig.GetSection("Vault");
-                             options.Address = vaultOptions["Address"];
-                             options.Role = vaultOptions["Role"];
-                             options.MountPath = vaultOptions["MountPath"];
-                             options.Engine = vaultOptions["Engine"];
-                             options.VaultToken = builtConfig.GetSection("VAULT_SECRET_ID").Value;
+                             configuration.GetOptionsFromConfiguration<VaultOptions>(options);
                          });
                      }
                  })

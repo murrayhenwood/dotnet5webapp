@@ -39,21 +39,10 @@ namespace DotNet5WebApp
         {
             services.Configure<VaultOptions>(Configuration.GetSection("Vault"));
 
-            var dbBuilder = new SqlConnectionStringBuilder(
-              Configuration.GetConnectionString("Database")
-            );
-
-            if (Configuration["database:userID"] != null)
-            {
-                dbBuilder.UserID = Configuration["database:userID"];
-                dbBuilder.Password = Configuration["database:password"];
-
-                Configuration.GetSection("ConnectionStrings")["Database"] = dbBuilder.ConnectionString;
-            }
-
-            services.AddDbContext<ProjectContext>(opt =>
-                opt.UseSqlServer(Configuration.GetConnectionString("Database")));
-
+            services.AddVaultBackedContext<ProjectContext>(
+                Configuration, 
+                connectionString: "mssql", 
+                vaultRole: "my-role");
 
             services.AddApiVersioning();
             services.AddControllers();

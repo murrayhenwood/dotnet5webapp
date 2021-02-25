@@ -8,12 +8,9 @@ namespace DotNet5WebApp.Core.Vault
     public class VaultOptions
     {
         public string Address { get; set; }
-        public string Role { get; set; }
-
         public string MountPath { get; set; }
         public string Engine { get; set; }
-
-
+        public List<string> Roles { get; set; } = new List<string>();
         public string VaultToken { get; set; }
     }
 }
